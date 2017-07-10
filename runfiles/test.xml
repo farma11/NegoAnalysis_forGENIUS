@@ -1,0 +1,18 @@
+<run_program>
+  <agent_data size="3">
+    <agent name="Agent A"></agent>
+    <agent name="Agent B"></agent>
+    <agent name="Agent C"></agent>
+  </agent_data>
+  <preference root="./preference/i6v10_random">
+    <item name="d10r00_util1.xml"></item>
+    <item name="d10r00_util2.xml"></item>
+    <item name="d10r00_util3.xml"></item>
+  </preference>
+  <log root="./log" size="4">
+    <item name="log1.csv"></item>
+    <item name="log2.csv"></item>
+    <item name="log3.csv"></item>
+    <item name="log4.csv"></item>
+  </log>
+</run_program>

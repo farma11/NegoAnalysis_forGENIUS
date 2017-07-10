@@ -1,0 +1,101 @@
+Starting negotiation session.
+Round 1
+  Turn 1: Party 1       (Offer: Bid[a: a3, b: b1, c: c4, d: d7, e: e8, f: f9, ])
+  Turn 2: Party 2       (Offer: Bid[a: a1, b: b9, c: c2, d: d1, e: e10, f: f9, ])
+  Turn 3: Party 3       (Offer: Bid[a: a3, b: b6, c: c9, d: d10, e: e5, f: f5, ])
+Round 2
+  Turn 1: Party 1       (Offer: Bid[a: a3, b: b1, c: c4, d: d7, e: e8, f: f9, ])
+  Turn 2: Party 2       (Offer: Bid[a: a7, b: b9, c: c2, d: d9, e: e10, f: f8, ])
+  Turn 3: Party 3       (Offer: Bid[a: a3, b: b6, c: c9, d: d10, e: e5, f: f5, ])
+Round 3
+  Turn 1: Party 1       (Offer: Bid[a: a3, b: b1, c: c4, d: d7, e: e8, f: f9, ])
+  Turn 2: Party 2       (Offer: Bid[a: a1, b: b9, c: c4, d: d3, e: e1, f: f3, ])
+  Turn 3: Party 3       (Offer: Bid[a: a3, b: b6, c: c9, d: d10, e: e5, f: f5, ])
+Round 4
+  Turn 1: Party 1       (Offer: Bid[a: a3, b: b1, c: c4, d: d7, e: e8, f: f9, ])
+  Turn 2: Party 2       (Offer: Bid[a: a1, b: b6, c: c2, d: d3, e: e1, f: f3, ])
+  Turn 3: Party 3       (Offer: Bid[a: a3, b: b6, c: c9, d: d10, e: e5, f: f5, ])
+Round 5
+  Turn 1: Party 1       (Offer: Bid[a: a3, b: b1, c: c4, d: d7, e: e8, f: f9, ])
+  Turn 2: Party 2       (Offer: Bid[a: a1, b: b6, c: c3, d: d1, e: e1, f: f3, ])
+  Turn 3: Party 3       (Offer: Bid[a: a3, b: b6, c: c9, d: d10, e: e5, f: f5, ])
+Round 6
+  Turn 1: Party 1       (Offer: Bid[a: a3, b: b1, c: c4, d: d7, e: e8, f: f9, ])
+  Turn 2: Party 2       (Offer: Bid[a: a8, b: b6, c: c2, d: d10, e: e7, f: f6, ])
+  Turn 3: Party 3       (Offer: Bid[a: a3, b: b6, c: c9, d: d10, e: e5, f: f5, ])
+Round 7
+  Turn 1: Party 1       (Offer: Bid[a: a3, b: b1, c: c4, d: d7, e: e8, f: f9, ])
+  Turn 2: Party 2       (Offer: Bid[a: a10, b: b9, c: c2, d: d9, e: e8, f: f10, ])
+  Turn 3: Party 3       (Offer: Bid[a: a3, b: b6, c: c9, d: d10, e: e5, f: f5, ])
+Round 8
+  Turn 1: Party 1       (Offer: Bid[a: a3, b: b1, c: c4, d: d7, e: e8, f: f9, ])
+  Turn 2: Party 2       (Offer: Bid[a: a8, b: b6, c: c1, d: d1, e: e7, f: f6, ])
+  Turn 3: Party 3       (Offer: Bid[a: a3, b: b6, c: c9, d: d10, e: e5, f: f5, ])
+Round 9
+  Turn 1: Party 1       (Offer: Bid[a: a3, b: b1, c: c4, d: d7, e: e8, f: f9, ])
+  Turn 2: Party 2       (Offer: Bid[a: a3, b: b9, c: c2, d: d9, e: e8, f: f10, ])
+  Turn 3: Party 3       (Offer: Bid[a: a3, b: b6, c: c9, d: d10, e: e5, f: f5, ])
+Round 10
+  Turn 1: Party 1       (Offer: Bid[a: a3, b: b1, c: c4, d: d7, e: e8, f: f9, ])
+  Turn 2: Party 2       (Offer: Bid[a: a9, b: b9, c: c2, d: d9, e: e8, f: f10, ])
+  Turn 3: Party 3       (Offer: Bid[a: a3, b: b6, c: c9, d: d10, e: e5, f: f5, ])
+Round 11
+  Turn 1: Party 1       (Offer: Bid[a: a3, b: b1, c: c4, d: d7, e: e8, f: f9, ])
+  Turn 2: Party 2       (Offer: Bid[a: a1, b: b1, c: c8, d: d5, e: e7, f: f3, ])
+  Turn 3: Party 3       (Offer: Bid[a: a3, b: b6, c: c9, d: d10, e: e5, f: f5, ])
+Round 12
+  Turn 1: Party 1       (Offer: Bid[a: a3, b: b1, c: c4, d: d7, e: e8, f: f9, ])
+  Turn 2: Party 2       (Offer: Bid[a: a10, b: b4, c: c1, d: d5, e: e7, f: f3, ])
+  Turn 3: Party 3       (Offer: Bid[a: a3, b: b6, c: c9, d: d10, e: e5, f: f5, ])
+Round 13
+  Turn 1: Party 1       (Offer: Bid[a: a3, b: b1, c: c4, d: d7, e: e8, f: f9, ])
+  Turn 2: Party 2       (Offer: Bid[a: a1, b: b1, c: c1, d: d5, e: e7, f: f3, ])
+  Turn 3: Party 3       (Offer: Bid[a: a3, b: b6, c: c9, d: d10, e: e5, f: f5, ])
+Round 14
+  Turn 1: Party 1       (Offer: Bid[a: a3, b: b1, c: c4, d: d7, e: e8, f: f9, ])
+  Turn 2: Party 2       (Offer: Bid[a: a1, b: b1, c: c4, d: d1, e: e5, f: f3, ])
+  Turn 3: Party 3       (Offer: Bid[a: a3, b: b6, c: c9, d: d10, e: e5, f: f5, ])
+Round 15
+  Turn 1: Party 1       (Offer: Bid[a: a3, b: b1, c: c4, d: d7, e: e8, f: f9, ])
+  Turn 2: Party 2       (Offer: Bid[a: a1, b: b1, c: c5, d: d5, e: e1, f: f3, ])
+  Turn 3: Party 3       (Offer: Bid[a: a3, b: b6, c: c9, d: d10, e: e5, f: f5, ])
+Round 16
+  Turn 1: Party 1       (Offer: Bid[a: a3, b: b1, c: c4, d: d7, e: e8, f: f9, ])
+  Turn 2: Party 2       (Offer: Bid[a: a10, b: b10, c: c2, d: d5, e: e1, f: f3, ])
+  Turn 3: Party 3       (Offer: Bid[a: a3, b: b6, c: c9, d: d10, e: e5, f: f5, ])
+Round 17
+  Turn 1: Party 1       (Offer: Bid[a: a3, b: b1, c: c4, d: d7, e: e8, f: f9, ])
+  Turn 2: Party 2       (Offer: Bid[a: a1, b: b1, c: c1, d: d3, e: e1, f: f3, ])
+  Turn 3: Party 3       (Offer: Bid[a: a3, b: b6, c: c9, d: d10, e: e5, f: f5, ])
+Round 18
+  Turn 1: Party 1       (Offer: Bid[a: a3, b: b1, c: c4, d: d7, e: e8, f: f9, ])
+  Turn 2: Party 2       (Offer: Bid[a: a2, b: b1, c: c2, d: d3, e: e1, f: f3, ])
+  Turn 3: Party 3       (Offer: Bid[a: a3, b: b6, c: c9, d: d10, e: e5, f: f5, ])
+Round 19
+  Turn 1: Party 1       (Offer: Bid[a: a3, b: b1, c: c4, d: d7, e: e8, f: f9, ])
+  Turn 2: Party 2       (Offer: Bid[a: a1, b: b1, c: c3, d: d4, e: e1, f: f3, ])
+  Turn 3: Party 3       (Offer: Bid[a: a3, b: b6, c: c9, d: d10, e: e5, f: f5, ])
+Round 20
+  Turn 1: Party 1       (Offer: Bid[a: a3, b: b1, c: c4, d: d7, e: e8, f: f9, ])
+  Turn 2: Party 2       (Offer: Bid[a: a4, b: b7, c: c10, d: d6, e: e10, f: f1, ])
+  Turn 3: Party 3       (Offer: Bid[a: a3, b: b6, c: c9, d: d10, e: e5, f: f5, ])
+Round 21
+  Turn 1: Party 1       (Offer: Bid[a: a3, b: b1, c: c4, d: d7, e: e8, f: f9, ])
+  Turn 2: Party 2       (Accept)
+  Turn 3: Party 3       (Accept)
+Found an agreement: Bid[a: a3, b: b1, c: c4, d: d7, e: e8, f: f9, ]
+Finished negotiation session in 0.081s
+Time (s):		0.081347393
+Rounds:		21
+Agreement?:		Yes
+Discounted?:		No
+3
+Min. utility:		0.64000
+Max. utility:		1.00000
+Distance to pareto:	0.18358
+Distance to Nash:	0.52764
+Social welfare:		2.31000
+Agent utility:		1.00000 (Party 1)
+Agent utility:		0.67000 (Party 2)
+Agent utility:		0.64000 (Party 3)
+

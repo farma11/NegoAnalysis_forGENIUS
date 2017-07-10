@@ -1,0 +1,16 @@
+# Git global setup:
+git config --global user.name "toyama.tatsuya"
+git config --global user.email "toyama.tatsuya@itolab.nitech.ac.jp"
+# Create Repository
+mkdir negoanal_genius
+cd negoanal_genius
+git init
+touch README
+git add README
+git commit -m 'first commit'
+git remote add origin git@annonay.itolab.nitech.ac.jp:negoanal_genius.git
+git push -u origin master
+# Existing Git Repo?
+cd existing_git_repo
+git remote add origin git@annonay.itolab.nitech.ac.jp:negoanal_genius.git
+git push -u origin master

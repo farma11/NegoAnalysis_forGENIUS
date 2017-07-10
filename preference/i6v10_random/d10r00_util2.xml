@@ -1,0 +1,85 @@
+<utility_space>
+  <objective index="0" description="" name="i6v10_random" type="objective" etype="objective">
+    <issue index="1" name="a" vtype="discrete" type="discrete" etype="discrete">
+       		<item index="1" value="a1" evaluation="10"> </item>
+       		<item index="2" value="a2" evaluation="1"> </item>
+       		<item index="3" value="a3" evaluation="5"> </item>
+       		<item index="4" value="a4" evaluation="6"> </item>
+       		<item index="5" value="a5" evaluation="2"> </item>
+       		<item index="6" value="a6" evaluation="3"> </item>
+       		<item index="7" value="a7" evaluation="7"> </item>
+       		<item index="8" value="a8" evaluation="9"> </item>
+       		<item index="9" value="a9" evaluation="4"> </item>
+       		<item index="10" value="a10" evaluation="8"> </item>
+       	</issue>
+       	<issue index="2" name="b" vtype="discrete" type="discrete" etype="discrete">
+       		<item index="1" value="b1" evaluation="6"> </item>
+       		<item index="2" value="b2" evaluation="1"> </item>
+       		<item index="3" value="b3" evaluation="3"> </item>
+       		<item index="4" value="b4" evaluation="7"> </item>
+       		<item index="5" value="b5" evaluation="2"> </item>
+       		<item index="6" value="b6" evaluation="9"> </item>
+       		<item index="7" value="b7" evaluation="5"> </item>
+       		<item index="8" value="b8" evaluation="8"> </item>
+       		<item index="9" value="b9" evaluation="10"> </item>
+       		<item index="10" value="b10" evaluation="4"> </item>
+       	</issue>
+       	<issue index="3" name="c" vtype="discrete" type="discrete" etype="discrete">
+       		<item index="1" value="c1" evaluation="2"> </item>
+       		<item index="2" value="c2" evaluation="10"> </item>
+       		<item index="3" value="c3" evaluation="6"> </item>
+       		<item index="4" value="c4" evaluation="9"> </item>
+       		<item index="5" value="c5" evaluation="3"> </item>
+       		<item index="6" value="c6" evaluation="1"> </item>
+       		<item index="7" value="c7" evaluation="5"> </item>
+       		<item index="8" value="c8" evaluation="4"> </item>
+       		<item index="9" value="c9" evaluation="8"> </item>
+       		<item index="10" value="c10" evaluation="7"> </item>
+       	</issue>
+       	<issue index="4" name="d" vtype="discrete" type="discrete" etype="discrete">
+       		<item index="1" value="d1" evaluation="10"> </item>
+       		<item index="2" value="d2" evaluation="1"> </item>
+       		<item index="3" value="d3" evaluation="8"> </item>
+       		<item index="4" value="d4" evaluation="2"> </item>
+       		<item index="5" value="d5" evaluation="9"> </item>
+       		<item index="6" value="d6" evaluation="3"> </item>
+       		<item index="7" value="d7" evaluation="4"> </item>
+       		<item index="8" value="d8" evaluation="6"> </item>
+       		<item index="9" value="d9" evaluation="7"> </item>
+       		<item index="10" value="d10" evaluation="5"> </item>
+       	</issue>
+       	<issue index="5" name="e" vtype="discrete" type="discrete" etype="discrete">
+       		<item index="1" value="e1" evaluation="8"> </item>
+       		<item index="2" value="e2" evaluation="2"> </item>
+       		<item index="3" value="e3" evaluation="5"> </item>
+       		<item index="4" value="e4" evaluation="1"> </item>
+       		<item index="5" value="e5" evaluation="6"> </item>
+       		<item index="6" value="e6" evaluation="4"> </item>
+       		<item index="7" value="e7" evaluation="9"> </item>
+       		<item index="8" value="e8" evaluation="7"> </item>
+       		<item index="9" value="e9" evaluation="3"> </item>
+       		<item index="10" value="e10" evaluation="10"> </item>
+       	</issue>
+       	<issue index="6" name="f" vtype="discrete" type="discrete" etype="discrete">
+       		<item index="1" value="f1" evaluation="7"> </item>
+       		<item index="2" value="f2" evaluation="2"> </item>
+       		<item index="3" value="f3" evaluation="8"> </item>
+       		<item index="4" value="f4" evaluation="1"> </item>
+       		<item index="5" value="f5" evaluation="3"> </item>
+       		<item index="6" value="f6" evaluation="5"> </item>
+       		<item index="7" value="f7" evaluation="4"> </item>
+       		<item index="8" value="f8" evaluation="9"> </item>
+       		<item index="9" value="f9" evaluation="10"> </item>
+       		<item index="10" value="f10" evaluation="6"> </item>
+       	</issue>
+
+        <weight index="1"  value="0.1"> </weight>
+        <weight index="2"  value="0.3"> </weight>
+        <weight index="3"  value="0.1"> </weight>
+        <weight index="4"  value="0.1"> </weight>
+        <weight index="5"  value="0.3"> </weight>
+        <weight index="6"  value="0.1"> </weight>
+  </objective>
+  <discount_factor value="1.0"> </discount_factor>
+  <reservation value="0.0"> </reservation>
+</utility_space>
