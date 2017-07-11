@@ -3,7 +3,7 @@ from xml.etree import ElementTree
 import multiprocessing as mp # 並列化
 import sys
 import copy
-import decimal
+import math
 
 class Preference(object):
     def __init__(self, xmlfile):
@@ -155,9 +155,8 @@ def calMOL_sq(pref1, pref2, bids):
     """計算量を無視して、bidsの二乗差の和を返す"""
     if len(bids) == 0: return 0.0 # 対象bidが空集合の場合は0を返す
 
-    dist = 0.0
-
     # 各bidに関して２乗差を計算し，和をとる
+    dist = 0.0
     for bid in bids:
         u  = [pref1.calBidUtil(bid), pref2.calBidUtil(bid)]
         du = u[0] - u[1]
@@ -180,20 +179,22 @@ def calDistPref_sq(pref1, pref2):
     return calMOL_sq(pref1, pref2, pref1.getAllBid()) # 全bidを取得
 
 
-def calDistMultiPref_sq(prefs):
+def calDistMultiPref_sq(prefs, bids):
     """多者間交渉における全体の効用情報の対立度を返す"""
+
+    # 各bidに対してそれぞれ距離を計算し、和をとる
     dist = 0.0
-    bids = prefs[0].getAllBid()
     for bid in bids:
+        # bidにおける各エージェントの効用の総和を計算
         sumUtil = 0.0
-        print "#"
         for pref in prefs:
-            print pref.calBidUtil(bid),
+            #print pref.calBidUtil(bid),
             sumUtil += pref.calBidUtil(bid)
-            print "(" + str(sumUtil) + ")",
+
+        # bidにおける距離を加算
         for pref in prefs:
             dist += (pref.calBidUtil(bid) - sumUtil / len(prefs))**2
-    return dist / len(bids)
+    return (dist * len(prefs)) / ((len(prefs)-1) * len(bids))
 
 
 def getAllPretoBids(pref1, pref2):
@@ -214,8 +215,10 @@ def getAllPretoBids(pref1, pref2):
         maxIdx = -1
         maxTemp = -1.0 # 現時点での相手の効用の最大
         for i, tempBid in enumerate(tempBids):
-            # 暫定最大値が更新された場合には、過去に参照した入札、つまり、本エージェントが現時点より高い効用値を望む場合、
-            # 全て相手エージェントの効用値が下がることを意味する
+            # 暫定最大値が更新された場合，その値より高い値はまだ探索していない部分に存在する
+            # 本エージェントの効用は降順にソートされているため、探索してない部分は現時点の値以下の値をとる
+            # つまり，暫定最大値が更新（相手エージェントの効用を高めるする）ためには、本エージェントの効用が下がる必要がある
+            # その時パレート最適であると言える
             if maxTemp < tempBid[1]:
                 # 2つ目のbid以降で，本エージェントが一つ前より効用値が下がる場合
                 if i != 0 and tempBids[i-1][0] > tempBid[0]:
@@ -244,13 +247,25 @@ def getAllPretoBids(pref1, pref2):
     #print "Pareto: " + str(paretoBids)
     return paretoBids
 
-def calParetoDistPref_sq(pref1, pref2):
-    pBids = getAllPretoBids(pref1, pref2)
-    dist = 0.0
+def getAllMultiParetoBids(prefs):
+    paretoBids = []
 
-    for pbid in pBids:
-        dist += (pref1.calBidUtil(pbid) -  pref2.calBidUtil(pbid))**2
-    return dist / float(len(pBids))
+    temps = getAllPretoBids(prefs[0], prefs[1])
+    if DEBUG: print str(temps) + " -> " + str(paretoBids)
+    paretoBids = temps
+
+
+    temps = getAllPretoBids(prefs[1], prefs[2])
+    for temp in temps:
+        if temp not in paretoBids: paretoBids.append(temp)
+    if DEBUG: print str(temps) + " -> " + str(paretoBids)
+
+    temps = getAllPretoBids(prefs[2], prefs[0])
+    for temp in temps:
+        if temp not in paretoBids: paretoBids.append(temp)
+    if DEBUG: print str(temps) + " -> " + str(paretoBids)
+
+    return paretoBids
 
 
 def print3partyDist(prefs):
@@ -258,32 +273,46 @@ def print3partyDist(prefs):
 
     print "<START> 3-party negotiation: Agent A, Agent B, and Agent C"
 
-    print "Target: All Bids"
+    print "MOL (Target set: All Bids) -------------------------------"
 
-    print "[AxB]" + str(calDistPref_sq(prefs[0],prefs[1])),
+    mols = [
+        calDistPref_sq(prefs[0],prefs[1]),
+        calDistPref_sq(prefs[1],prefs[2]),
+        calDistPref_sq(prefs[2],prefs[0]),
+        calDistMultiPref_sq( [prefs[0],prefs[1],prefs[2]], prefs[0].getAllBid() )
+        ]
+    print "  [AxB] " + str(mols[0]),
     print " (ECO Result: " + str(calDistPref_sqECO(prefs[0],prefs[1])) + ")"
-    print "[BxC]" + str(calDistPref_sq(prefs[1],prefs[2])),
+    print "  [BxC] " + str(mols[1]),
     print " (ECO Result: " + str(calDistPref_sqECO(prefs[1],prefs[2])) + ")"
-    print "[CxA]" + str(calDistPref_sq(prefs[2],prefs[0])),
+    print "  [CxA] " + str(mols[2]),
     print " (ECO Result: " + str(calDistPref_sqECO(prefs[2],prefs[0])) + ")"
 
-    print "[1x2](SQ)" + str(calDistMultiPref_sq( [prefs[0],prefs[1]] ))
-    print "[2x3](SQ)" + str(calDistMultiPref_sq( [prefs[1],prefs[2]] ))
-    print "[3x1](SQ)" + str(calDistMultiPref_sq( [prefs[2],prefs[0]] ))
+    print "[AxBxC] " + str(mols[3]),
+    print " (Mean of 2D results: " + str((mols[0]+mols[1]+mols[2])/3.0) + ")"
 
+    mols = [
+        calMOL_sq(prefs[0],prefs[1], getAllPretoBids(prefs[0],prefs[1])),
+        calMOL_sq(prefs[1],prefs[2], getAllPretoBids(prefs[1],prefs[2])),
+        calMOL_sq(prefs[2],prefs[0], getAllPretoBids(prefs[2],prefs[0])),
+        calDistMultiPref_sq( [prefs[0],prefs[1],prefs[2]], getAllMultiParetoBids([prefs[0],prefs[1],prefs[2]]) )
+        ]
 
-    print "Pareto Bids"
-    print "[AxB] " + str(calMOL_sq(prefs[0],prefs[1], getAllPretoBids(prefs[0],prefs[1])))
-    print "[BxC] " + str(calMOL_sq(prefs[1],prefs[2], getAllPretoBids(prefs[1],prefs[2])))
-    print "[CxA] " + str(calMOL_sq(prefs[2],prefs[0], getAllPretoBids(prefs[2],prefs[0])))
+    print "MOL (Target set: Pareto Bids) -------------------------------"
+    print "  [AxB] " + str(mols[0])
+    print "  [BxC] " + str(mols[1])
+    print "  [CxA] " + str(mols[2])
+
+    print "[AxBxC] " + str(mols[3]),
+    print " (Mean of 2D results: " + str((mols[0]+mols[1]+mols[2])/3.0) + ")"
 
 
 # 対象となるxmlのpathをそれぞれ記入 (現時点では3者間交渉にのみ対応)
 xmls_path = [
     "./preference/Domain1/Domain1.xml",
-    "./preference/Domain2/Domain2_util4.xml",
-    "./preference/Domain2/Domain2_util5.xml",
-    "./preference/Domain2/Domain2_util6.xml"
+    "./preference/Domain1/Domain1_util2.xml",
+    "./preference/Domain1/Domain1_util3.xml",
+    "./preference/Domain1/Domain1_util4.xml"
 ]
 # それぞれのxmlを読み込み，Preferenceクラスとして格納
 prefs = [
