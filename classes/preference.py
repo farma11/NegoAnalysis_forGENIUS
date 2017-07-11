@@ -3,6 +3,7 @@ from xml.etree import ElementTree
 import multiprocessing as mp # 並列化
 import sys
 import copy
+import decimal
 
 class Preference(object):
     def __init__(self, xmlfile):
@@ -103,47 +104,13 @@ class Preference(object):
         return bids
 
 # Preference関連の関数
+DEBUG = True
 
 def calDistValueUtil(pref1, pref2, issueID, valueID):
     """特定Valueの効用値の差を計算する"""
     #print issueID, valueID
     return pref1.getValueUtil(issueID, valueID) - pref2.getValueUtil(issueID, valueID)
 
-def calDistValuesUtil_abs(pref1, pref2, issueID):
-    """特定Issueの全Valueの効用値の差を計算する"""
-    valueSize = pref1.getValueSize(issueID)
-    if valueSize != pref2.getValueSize(issueID):
-        sys.stderr.write('2つの効用情報のValueの次元が異なります')
-        return None
-
-    dist = 0.0
-    for valueID in range(1, valueSize+1):
-        dist += abs(calDistValueUtil(pref1, pref2, issueID, valueID))
-    return dist
-
-def calDistBidsUtil_abs(pref1, pref2):
-    """全合意案候補の効用値の差を返す"""
-    issueSize = pref1.getIssueSize()
-    if issueSize != pref2.getIssueSize():
-        sys.stderr.write('2つの効用情報のIssueの次元が異なります')
-        return None
-
-    dist = 0.0
-    for issueID in range(1, issueSize+1):
-        dist += calDistValuesUtil_abs(pref1, pref2, issueID) / pref1.getValueSize(issueID)
-    return dist
-
-def calDistPref_abs(pref1, pref2):
-    """全合意案候補の効用値を合意案候補数で正規化した値を返す"""
-    return calDistBidsUtil_abs(pref1, pref2)
-
-def calDistPref_absTEST(pref1, pref2):
-    """計算量を無視して、単純に全bidの絶対値差の和を返す"""
-    dist = 0.0
-    bids = pref1.getAllBid()
-    for bid in bids:
-        dist += abs(pref1.calBidUtil(bid) - pref2.calBidUtil(bid))
-    return dist / len(bids)
 
 # 2乗差に基づく効用関数の対立度
 def calDistValuesUtil_sq(pref1, pref2, issueID):
@@ -171,9 +138,10 @@ def calDistValuesUtil_sq(pref1, pref2, issueID):
     #print dist
     return dist
 
-def calDistBidsUtil_sq(pref1, pref2):
-    """全合意案候補の効用値の差を返す"""
+def calDistPref_sqECO(pref1, pref2):
+    """全合意案候補の効用値を合意案候補数で正規化した値を返す"""
     issueSize = pref1.getIssueSize()
+    # エラー処理
     if issueSize != pref2.getIssueSize():
         sys.stderr.write('2つの効用情報のIssueの次元が異なります')
         return None
@@ -183,18 +151,34 @@ def calDistBidsUtil_sq(pref1, pref2):
         dist += calDistValuesUtil_sq(pref1, pref2, issueID) / pref1.getValueSize(issueID)
     return dist
 
-def calDistPref_sq(pref1, pref2):
-    """全合意案候補の効用値を合意案候補数で正規化した値を返す"""
-    return calDistBidsUtil_sq(pref1, pref2)
+def calMOL_sq(pref1, pref2, bids):
+    """計算量を無視して、bidsの二乗差の和を返す"""
+    if len(bids) == 0: return 0.0 # 対象bidが空集合の場合は0を返す
 
-def calDistPref_sqTEST(pref1, pref2):
-    """計算量を無視して、単純に全bidの二乗差の和を返す"""
     dist = 0.0
-    bids = pref1.getAllBid()
+
+    # 各bidに関して２乗差を計算し，和をとる
     for bid in bids:
+        u  = [pref1.calBidUtil(bid), pref2.calBidUtil(bid)]
+        du = u[0] - u[1]
         dist += (pref1.calBidUtil(bid) - pref2.calBidUtil(bid))**2
-        print dist,
-    return dist / len(bids)
+
+        if DEBUG:
+            print " [DEBUG] ",
+            print "(" + str(round(u[0],4)) + " - " + str(round(u[1],4)) + ")^2",
+            print " = (" + str(round(du,4)) + ")^2 = " + str(round(du**2,4)),
+            print " NOW:" + str(dist)
+
+    ans = dist / len(bids)
+    if DEBUG:
+        print " [DEBUG] ",
+        print "Result: " + str(dist) + " / " + str(len(bids)) + " = " + str(ans)
+    return ans
+
+def calDistPref_sq(pref1, pref2):
+    """計算量を無視して、単純に全bidの二乗差の和を返す"""
+    return calMOL_sq(pref1, pref2, pref1.getAllBid()) # 全bidを取得
+
 
 def calDistMultiPref_sq(prefs):
     """多者間交渉における全体の効用情報の対立度を返す"""
@@ -227,24 +211,37 @@ def getAllPretoBids(pref1, pref2):
         tempBids = sorted(tempBids, key=lambda x: float(-x[0])) # 降順ソート
         #print "#1" + str(tempBids)
 
+        maxIdx = -1
         maxTemp = -1.0 # 現時点での相手の効用の最大
         for i, tempBid in enumerate(tempBids):
             # 暫定最大値が更新された場合には、過去に参照した入札、つまり、本エージェントが現時点より高い効用値を望む場合、
             # 全て相手エージェントの効用値が下がることを意味する
             if maxTemp < tempBid[1]:
-                paretoBids.append(tempBid[2])
-                maxTemp = tempBid[1]
+                # 2つ目のbid以降で，本エージェントが一つ前より効用値が下がる場合
+                if i != 0 and tempBids[i-1][0] > tempBid[0]:
+                    paretoBids.append(tempBids[maxIdx][2])
+                maxTemp = tempBid[1]    # 相手エージェントの暫定最大効用値の更新
+                maxIdx  = i             # 相手エージェントの暫定最大効用値をとる添え字の更新
 
         # pref2
         tempBids = sorted(tempBids, key=lambda x: float(-x[1])) # 降順ソート
         #print "#2" + str(tempBids)
 
+        maxIdx = -1
         maxTemp = -1.0 # 現時点での相手の効用の最大
         for i, tempBid in enumerate(tempBids):
+            if DEBUG and i != 0:
+                print str(i) + " maxIdx:" + str(maxIdx) + " maxTemp:" + str(maxTemp)
             if maxTemp < tempBid[0]:
-                if tempBid[2] not in paretoBids: paretoBids.append(tempBid[2])
-                maxTemp = tempBid[0]
 
+                if i != 0 and tempBids[i-1][1] > tempBid[1]:
+                    if tempBids[maxIdx][2] not in paretoBids:
+
+                        paretoBids.append(tempBids[maxIdx][2])
+                maxTemp = tempBid[0]    # 相手エージェントの暫定最大効用値の更新
+                maxIdx  = i             # 相手エージェントの暫定最大効用値をとる添え字の更新
+
+    #print "Pareto: " + str(paretoBids)
     return paretoBids
 
 def calParetoDistPref_sq(pref1, pref2):
@@ -255,44 +252,49 @@ def calParetoDistPref_sq(pref1, pref2):
         dist += (pref1.calBidUtil(pbid) -  pref2.calBidUtil(pbid))**2
     return dist / float(len(pBids))
 
-def calParetoDistPref_abs(pref1, pref2):
-    pBids = getAllPretoBids(pref1, pref2)
-    dist = 0.0
-
-    for pbid in pBids:
-        dist += abs(pref1.calBidUtil(pbid) - pref2.calBidUtil(pbid))
-    return dist / float(len(pBids))
-
 
 def print3partyDist(prefs):
     """3者の対立度を表示"""
 
-    print "All Bids"
-    print "[1x2](SQ)" + str(calDistPref_sqTEST(prefs[0],prefs[1])) #+ " (ABS)" + str(calDistPref_absTEST(pref1,pref2))
-    print "[2x3](SQ)" + str(calDistPref_sqTEST(prefs[1],prefs[2])) #+ " (ABS)" + str(calDistPref_absTEST(pref2,pref3))
-    print "[3x1](SQ)" + str(calDistPref_sqTEST(prefs[2],prefs[0])) #+ " (ABS)" + str(calDistPref_absTEST(pref3,pref1))
+    print "<START> 3-party negotiation: Agent A, Agent B, and Agent C"
 
-    print "[1x2](SQ)" + str(calDistMultiPref_sq( [prefs[0],prefs[1]] )) #+ " (ABS)" + str(calDistPref_absTEST(pref1,pref2))
-    print "[2x3](SQ)" + str(calDistMultiPref_sq( [prefs[1],prefs[2]] )) #+ " (ABS)" + str(calDistPref_absTEST(pref2,pref3))
-    print "[3x1](SQ)" + str(calDistMultiPref_sq( [prefs[2],prefs[0]] )) #+ " (ABS)" + str(calDistPref_absTEST(pref3,pref1))
+    print "Target: All Bids"
+
+    print "[AxB]" + str(calDistPref_sq(prefs[0],prefs[1])),
+    print " (ECO Result: " + str(calDistPref_sqECO(prefs[0],prefs[1])) + ")"
+    print "[BxC]" + str(calDistPref_sq(prefs[1],prefs[2])),
+    print " (ECO Result: " + str(calDistPref_sqECO(prefs[1],prefs[2])) + ")"
+    print "[CxA]" + str(calDistPref_sq(prefs[2],prefs[0])),
+    print " (ECO Result: " + str(calDistPref_sqECO(prefs[2],prefs[0])) + ")"
+
+    print "[1x2](SQ)" + str(calDistMultiPref_sq( [prefs[0],prefs[1]] ))
+    print "[2x3](SQ)" + str(calDistMultiPref_sq( [prefs[1],prefs[2]] ))
+    print "[3x1](SQ)" + str(calDistMultiPref_sq( [prefs[2],prefs[0]] ))
 
 
-    #print "Pareto Bids"
-    #print "[1x2](SQ)" + str(calParetoDistPref_sq(pref1,pref2)) + " (ABS)" + str(calParetoDistPref_abs(pref1,pref2))
-    #print "[2x3](SQ)" + str(calParetoDistPref_sq(pref2,pref3)) + " (ABS)" + str(calParetoDistPref_abs(pref2,pref3))
-    #print "[3x1](SQ)" + str(calParetoDistPref_sq(pref3,pref1)) + " (ABS)" + str(calParetoDistPref_abs(pref3,pref1))
+    print "Pareto Bids"
+    print "[AxB] " + str(calMOL_sq(prefs[0],prefs[1], getAllPretoBids(prefs[0],prefs[1])))
+    print "[BxC] " + str(calMOL_sq(prefs[1],prefs[2], getAllPretoBids(prefs[1],prefs[2])))
+    print "[CxA] " + str(calMOL_sq(prefs[2],prefs[0], getAllPretoBids(prefs[2],prefs[0])))
 
 
-xmls = [
-    "./preference/Domain1/Domain1_", "util2.xml", "util3.xml", "util4.xml"
-    #"./preference/i3v3_622/d10r00_", "util226.xml", "util262.xml", "util622.xml"
-    #"./preference/i6v10_random/d10r00_", "util1.xml", "util2.xml", "util3.xml"
-    #"./preference/i5v5_distHigh/d10r00_", "util1.xml", "util2.xml", "util3.xml"
+# 対象となるxmlのpathをそれぞれ記入 (現時点では3者間交渉にのみ対応)
+xmls_path = [
+    "./preference/Domain1/Domain1.xml",
+    "./preference/Domain2/Domain2_util4.xml",
+    "./preference/Domain2/Domain2_util5.xml",
+    "./preference/Domain2/Domain2_util6.xml"
 ]
+# それぞれのxmlを読み込み，Preferenceクラスとして格納
 prefs = [
-    Preference(xmls[0]+xmls[1]), Preference(xmls[0]+xmls[2]), Preference(xmls[0]+xmls[3])
+    Preference(xmls_path[1]), Preference(xmls_path[2]), Preference(xmls_path[3])
 ]
-print "START"
+
+DEBUG = False
+
+
+
+# ３者間交渉として計算開始
 print3partyDist(prefs)
 
 """
