@@ -221,10 +221,11 @@ def getAllPretoBids(pref1, pref2):
             # その時パレート最適であると言える
             if maxTemp < tempBid[1]:
                 # 2つ目のbid以降で，本エージェントが一つ前より効用値が下がる場合
-                if i != 0 and tempBids[i-1][0] > tempBid[0]:
+                if maxIdx != -1 and tempBids[maxIdx][0] > tempBid[0]:
                     paretoBids.append(tempBids[maxIdx][2])
                 maxTemp = tempBid[1]    # 相手エージェントの暫定最大効用値の更新
                 maxIdx  = i             # 相手エージェントの暫定最大効用値をとる添え字の更新
+        #print "nowPareto: " + str(paretoBids)
 
         # pref2
         tempBids = sorted(tempBids, key=lambda x: float(-x[1])) # 降順ソート
@@ -244,8 +245,24 @@ def getAllPretoBids(pref1, pref2):
                 maxTemp = tempBid[0]    # 相手エージェントの暫定最大効用値の更新
                 maxIdx  = i             # 相手エージェントの暫定最大効用値をとる添え字の更新
 
-    #print "Pareto: " + str(paretoBids)
+    #print "**Pareto: " + str(paretoBids)
     return paretoBids
+
+
+def getAllMultiParetoBids_ECO(paretoBids):
+    ans = list(paretoBids[0]) # 複製(参照渡ししない)
+
+    temps = paretoBids[1]
+    for temp in temps:
+        if temp not in ans: ans.append(temp)
+    if DEBUG: print str(paretoBids[1]) + " -> " + str(ans)
+
+    for temp in paretoBids[2]:
+        if temp not in ans: ans.append(temp)
+    if DEBUG: print str(paretoBids[2]) + " -> " + str(ans)
+
+    return ans
+
 
 def getAllMultiParetoBids(prefs):
     paretoBids = []
@@ -268,6 +285,7 @@ def getAllMultiParetoBids(prefs):
     return paretoBids
 
 
+
 def print3partyDist(prefs):
     """3者の対立度を表示"""
 
@@ -281,24 +299,6 @@ def print3partyDist(prefs):
         calDistPref_sq(prefs[2],prefs[0]),
         calDistMultiPref_sq( [prefs[0],prefs[1],prefs[2]], prefs[0].getAllBid() )
         ]
-    print "  [AxB] " + str(mols[0]),
-    print " (ECO Result: " + str(calDistPref_sqECO(prefs[0],prefs[1])) + ")"
-    print "  [BxC] " + str(mols[1]),
-    print " (ECO Result: " + str(calDistPref_sqECO(prefs[1],prefs[2])) + ")"
-    print "  [CxA] " + str(mols[2]),
-    print " (ECO Result: " + str(calDistPref_sqECO(prefs[2],prefs[0])) + ")"
-
-    print "[AxBxC] " + str(mols[3]),
-    print " (Mean of 2D results: " + str((mols[0]+mols[1]+mols[2])/3.0) + ")"
-
-    mols = [
-        calMOL_sq(prefs[0],prefs[1], getAllPretoBids(prefs[0],prefs[1])),
-        calMOL_sq(prefs[1],prefs[2], getAllPretoBids(prefs[1],prefs[2])),
-        calMOL_sq(prefs[2],prefs[0], getAllPretoBids(prefs[2],prefs[0])),
-        calDistMultiPref_sq( [prefs[0],prefs[1],prefs[2]], getAllMultiParetoBids([prefs[0],prefs[1],prefs[2]]) )
-        ]
-
-    print "MOL (Target set: Pareto Bids) -------------------------------"
     print "  [AxB] " + str(mols[0])
     print "  [BxC] " + str(mols[1])
     print "  [CxA] " + str(mols[2])
@@ -306,33 +306,45 @@ def print3partyDist(prefs):
     print "[AxBxC] " + str(mols[3]),
     print " (Mean of 2D results: " + str((mols[0]+mols[1]+mols[2])/3.0) + ")"
 
+    # Pareto bidのリスト
+    paretoBids_2D = [
+        getAllPretoBids(prefs[0],prefs[1]),
+        getAllPretoBids(prefs[1],prefs[2]),
+        getAllPretoBids(prefs[2],prefs[0])
+    ]
+    paretoBids_3D = getAllMultiParetoBids_ECO(paretoBids_2D)
+
+
+    # Pareto bidをtarget setとした場合の対立度指標 MOL
+    mols = [
+        calMOL_sq(prefs[0],prefs[1], paretoBids_2D[0]),
+        calMOL_sq(prefs[1],prefs[2], paretoBids_2D[1]),
+        calMOL_sq(prefs[2],prefs[0], paretoBids_2D[2]),
+        calDistMultiPref_sq( [prefs[0],prefs[1],prefs[2]], paretoBids_3D )
+    ]
+
+    print "MOL (Target set: Pareto Bids) -------------------------------"
+    print "  [AxB] " + str(mols[0]) + " (Set size: " + str(len(paretoBids_2D[0])) + ")"
+    print "  [BxC] " + str(mols[1]) + " (Set size: " + str(len(paretoBids_2D[1])) + ")"
+    print "  [CxA] " + str(mols[2]) + " (Set size: " + str(len(paretoBids_2D[2])) + ")"
+
+    print "[AxBxC] " + str(mols[3]) + " (Set size: " + str(len(paretoBids_3D)) + ")",
+    print "(Mean of 2D results: " + str((mols[0]+mols[1]+mols[2])/3.0) + ")"
+
 
 # 対象となるxmlのpathをそれぞれ記入 (現時点では3者間交渉にのみ対応)
 xmls_path = [
-    "./preference/Domain1/Domain1.xml",
+    "./preference/Domain1/Domain1_util1.xml",
     "./preference/Domain1/Domain1_util2.xml",
-    "./preference/Domain1/Domain1_util3.xml",
-    "./preference/Domain1/Domain1_util4.xml"
+    "./preference/Domain1/Domain1_util3.xml"
 ]
 # それぞれのxmlを読み込み，Preferenceクラスとして格納
 prefs = [
-    Preference(xmls_path[1]), Preference(xmls_path[2]), Preference(xmls_path[3])
+    Preference(xmls_path[0]), Preference(xmls_path[1]), Preference(xmls_path[2])
 ]
 
+# 計算過程が出力される
 DEBUG = False
-
-
 
 # ３者間交渉として計算開始
 print3partyDist(prefs)
-
-"""
-for i in range(3):
-    bids = getAllPretoBids(prefs[i], prefs[(i+1)%3])
-    print len(bids)
-    for j in range(len(bids)):
-        print bids[j], prefs[i].calBidUtil(bids[j]), prefs[(i+1)%3].calBidUtil(bids[j])
-"""
-
-
-# TODO: 計算量を考慮した対立度の計算がくそ。デバッグ必要あり
