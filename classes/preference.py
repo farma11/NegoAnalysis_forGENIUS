@@ -15,28 +15,38 @@ class Preference(object):
         self.allBidSize = self.calAllBidSize()
 
     def getTreeRoot(self):
-        """xmlの木のrootを返す"""
+        """xmlの木のrootを返す | return the root of xml"""
         return self.treeRoot
 
     def getIssueSize(self):
-        """Issueの数を返す"""
+        """Issueの数を返す | return the number of Issue in the domain"""
         return len(self.treeRoot.find('objective').findall('issue'))
 
     def getValueSize(self, issueID):
-        """あるIssueのValueの数を返す"""
+        """あるIssueのValueの数を返す | return the number of Value of the issue in the domain"""
         return len(self.treeRoot.find('objective').findall('issue')[issueID-1].findall('item'))
 
 
     def getIssueWeight(self):
-        """各Issueの重みリストを返す"""
+        """各Issueの重みリストを返す | return a list of weights of each issue"""
         weights = []
         ws = self.treeRoot.find('objective').findall('weight')
         for w in ws:
             weights.append(float(w.get('value')))
         return weights
 
+    def getDiscountFactor(self):
+        """割引係数 Discount Factor を返す"""
+        df = float(self.treeRoot.find('discount_factor').get('value'))
+        return df
+
+    def getReservationValue(self):
+        """留保価格 Reservation Value を返す"""
+        rv = float(self.treeRoot.find('reservation').get('value'))
+        return rv
+
     def calValueUtils(self):
-        """線形効用空間の場合に、各ValueのUtilityを計算する"""
+        """線形効用空間の場合に、各ValueのUtilityを計算する | calculate utilities of each value for linear utility domain"""
         utils = []
         weights = self.getIssueWeight()
 
@@ -54,7 +64,7 @@ class Preference(object):
         return utils
 
     def calBidUtil(self, bid):
-        """bidのUtilityを計算"""
+        """bidのUtilityを計算 | calculate my utility of a bid"""
         util = 0.0
         issues = self.treeRoot.find('objective').findall('issue')
         for i, issue in enumerate(issues):
@@ -82,11 +92,11 @@ class Preference(object):
         return size
 
     def getAllBidSize(self):
-        """全合意案候補数を返す"""
+        """全合意案候補数を返す | return the number of all bids"""
         return self.allBidSize
 
     def getAllBid(self):
-        """全合意案候補を返す"""
+        """全合意案候補を返す | return the list of all bids"""
         bids = []
         issues = self.treeRoot.find('objective').findall('issue')
         for i, issue in enumerate(issues):
@@ -104,7 +114,7 @@ class Preference(object):
         return bids
 
 # Preference関連の関数
-DEBUG = True
+DEBUG = False
 
 def calDistValueUtil(pref1, pref2, issueID, valueID):
     """特定Valueの効用値の差を計算する"""
@@ -138,7 +148,7 @@ def calDistValuesUtil_sq(pref1, pref2, issueID):
     #print dist
     return dist
 
-def calDistPref_sqECO(pref1, pref2):
+def calMOL_sqECO(pref1, pref2):
     """全合意案候補の効用値を合意案候補数で正規化した値を返す"""
     issueSize = pref1.getIssueSize()
     # エラー処理
@@ -174,14 +184,9 @@ def calMOL_sq(pref1, pref2, bids):
         print "Result: " + str(dist) + " / " + str(len(bids)) + " = " + str(ans)
     return ans
 
-def calDistPref_sq(pref1, pref2):
-    """計算量を無視して、単純に全bidの二乗差の和を返す"""
-    return calMOL_sq(pref1, pref2, pref1.getAllBid()) # 全bidを取得
-
-
-def calDistMultiPref_sq(prefs, bids):
+def calMultiMOL_sq(prefs, bids):
     """多者間交渉における全体の効用情報の対立度を返す"""
-
+    if len(bids) == 0: return 0.0 # 対象bidが空集合の場合は0を返す
     # 各bidに対してそれぞれ距離を計算し、和をとる
     dist = 0.0
     for bid in bids:
@@ -196,6 +201,21 @@ def calDistMultiPref_sq(prefs, bids):
             dist += (pref.calBidUtil(bid) - sumUtil / len(prefs))**2
     return (dist * len(prefs)) / ((len(prefs)-1) * len(bids))
 
+def getAllBid_seg(prefs, ths, allBids):
+    """各エージェントの効用値がths以上の全合意案候補を返す"""
+    bids = []
+
+    for bid in allBids:
+        isOverThs = True
+        for i, pref in enumerate(prefs):
+            isOverThs = (pref.calBidUtil(bid) >= ths[i])
+            if isOverThs == False: break
+
+        if isOverThs:
+            bids.append(bid)
+            if DEBUG: print "segBid: " + str(bids)
+
+    return bids
 
 def getAllPretoBids(pref1, pref2):
     """pref1とpref2の場合のパレート最適Bidのリストを返す"""
@@ -215,6 +235,9 @@ def getAllPretoBids(pref1, pref2):
         maxIdx = -1
         maxTemp = -1.0 # 現時点での相手の効用の最大
         for i, tempBid in enumerate(tempBids):
+            if tempBid[0] >= 1.0 and tempBid[1] >= 1.0:
+                return [tempBid[2]]
+
             # 暫定最大値が更新された場合，その値より高い値はまだ探索していない部分に存在する
             # 本エージェントの効用は降順にソートされているため、探索してない部分は現時点の値以下の値をとる
             # つまり，暫定最大値が更新（相手エージェントの効用を高めるする）ためには、本エージェントの効用が下がる必要がある
@@ -284,21 +307,23 @@ def getAllMultiParetoBids(prefs):
 
     return paretoBids
 
+def print3partyFormalData(prefs):
+    print "A: DF = " + str(prefs[0].getDiscountFactor()),
+    print " / RV = " + str(prefs[0].getReservationValue())
+    print "B: DF = " + str(prefs[1].getDiscountFactor()),
+    print " / RV = " + str(prefs[1].getReservationValue())
+    print "C: DF = " + str(prefs[2].getDiscountFactor()),
+    print " / RV = " + str(prefs[2].getReservationValue())
 
-
-def print3partyDist(prefs):
-    """3者の対立度を表示"""
-
-    print "<START> 3-party negotiation: Agent A, Agent B, and Agent C"
-
-    print "MOL (Target set: All Bids) -------------------------------"
-
+def print3partyMOL_allBids(prefs):
+    allBids = prefs[0].getAllBid()
     mols = [
-        calDistPref_sq(prefs[0],prefs[1]),
-        calDistPref_sq(prefs[1],prefs[2]),
-        calDistPref_sq(prefs[2],prefs[0]),
-        calDistMultiPref_sq( [prefs[0],prefs[1],prefs[2]], prefs[0].getAllBid() )
+        calMOL_sq(prefs[0],prefs[1], allBids),
+        calMOL_sq(prefs[1],prefs[2], allBids),
+        calMOL_sq(prefs[2],prefs[0], allBids),
+        calMultiMOL_sq( [prefs[0],prefs[1],prefs[2]], allBids)
         ]
+
     print "  [AxB] " + str(mols[0])
     print "  [BxC] " + str(mols[1])
     print "  [CxA] " + str(mols[2])
@@ -306,6 +331,32 @@ def print3partyDist(prefs):
     print "[AxBxC] " + str(mols[3]),
     print " (Mean of 2D results: " + str((mols[0]+mols[1]+mols[2])/3.0) + ")"
 
+def print3partyMOL_allOverRVBids(prefs):
+    allBids = prefs[0].getAllBid()
+
+    segBids = [
+        getAllBid_seg([prefs[0],prefs[1]], [prefs[0].getReservationValue(),prefs[1].getReservationValue()], allBids),
+        getAllBid_seg([prefs[1],prefs[2]], [prefs[1].getReservationValue(),prefs[2].getReservationValue()], allBids),
+        getAllBid_seg([prefs[2],prefs[0]], [prefs[2].getReservationValue(),prefs[0].getReservationValue()], allBids),
+        getAllBid_seg([prefs[0],prefs[1],prefs[2]],
+            [prefs[0].getReservationValue(),prefs[1].getReservationValue(),prefs[2].getReservationValue()], allBids)
+    ]
+
+    mols = [
+        calMOL_sq(prefs[0],prefs[1],segBids[0]),
+        calMOL_sq(prefs[1],prefs[2],segBids[1]),
+        calMOL_sq(prefs[2],prefs[0],segBids[2]),
+        calMultiMOL_sq([prefs[0],prefs[1],prefs[2]],segBids[3])
+    ]
+
+    print "  [AxB] " + str(mols[0]) + " (Set size: " + str(len(segBids[0])) + ")" #+ str(segBids[0])
+    print "  [BxC] " + str(mols[1]) + " (Set size: " + str(len(segBids[1])) + ")" #+ str(segBids[1])
+    print "  [CxA] " + str(mols[2]) + " (Set size: " + str(len(segBids[2])) + ")" #+ str(segBids[2])
+
+    print "[AxBxC] " + str(mols[3]) + " (Set size: " + str(len(segBids[3])) + ")",
+    print "(Mean of 2D results: " + str((mols[0]+mols[1]+mols[2])/3.0) + ")"
+
+def print3partyMOL_allParetoBids(prefs):
     # Pareto bidのリスト
     paretoBids_2D = [
         getAllPretoBids(prefs[0],prefs[1]),
@@ -314,16 +365,14 @@ def print3partyDist(prefs):
     ]
     paretoBids_3D = getAllMultiParetoBids_ECO(paretoBids_2D)
 
-
     # Pareto bidをtarget setとした場合の対立度指標 MOL
     mols = [
         calMOL_sq(prefs[0],prefs[1], paretoBids_2D[0]),
         calMOL_sq(prefs[1],prefs[2], paretoBids_2D[1]),
         calMOL_sq(prefs[2],prefs[0], paretoBids_2D[2]),
-        calDistMultiPref_sq( [prefs[0],prefs[1],prefs[2]], paretoBids_3D )
+        calMultiMOL_sq( [prefs[0],prefs[1],prefs[2]], paretoBids_3D )
     ]
 
-    print "MOL (Target set: Pareto Bids) -------------------------------"
     print "  [AxB] " + str(mols[0]) + " (Set size: " + str(len(paretoBids_2D[0])) + ")"
     print "  [BxC] " + str(mols[1]) + " (Set size: " + str(len(paretoBids_2D[1])) + ")"
     print "  [CxA] " + str(mols[2]) + " (Set size: " + str(len(paretoBids_2D[2])) + ")"
@@ -331,12 +380,69 @@ def print3partyDist(prefs):
     print "[AxBxC] " + str(mols[3]) + " (Set size: " + str(len(paretoBids_3D)) + ")",
     print "(Mean of 2D results: " + str((mols[0]+mols[1]+mols[2])/3.0) + ")"
 
+def print3partyMOL_allOverRVParetoBids(prefs):
+    # Pareto bidのリスト
+    paretoBids_2D = [
+        getAllPretoBids(prefs[0],prefs[1]),
+        getAllPretoBids(prefs[1],prefs[2]),
+        getAllPretoBids(prefs[2],prefs[0])
+    ]
+    paretoBids_3D = getAllMultiParetoBids_ECO(paretoBids_2D)
+
+    segBids = [
+        getAllBid_seg([prefs[0],prefs[1]], [prefs[0].getReservationValue(),prefs[1].getReservationValue()], paretoBids_2D[0]),
+        getAllBid_seg([prefs[1],prefs[2]], [prefs[1].getReservationValue(),prefs[2].getReservationValue()], paretoBids_2D[1]),
+        getAllBid_seg([prefs[2],prefs[0]], [prefs[2].getReservationValue(),prefs[0].getReservationValue()], paretoBids_2D[2]),
+        getAllBid_seg([prefs[0],prefs[1],prefs[2]],
+            [prefs[0].getReservationValue(),prefs[1].getReservationValue(),prefs[2].getReservationValue()], paretoBids_3D)
+    ]
+
+    # Pareto bidをtarget setとした場合の対立度指標 MOL
+    mols = [
+        calMOL_sq(prefs[0],prefs[1],segBids[0]),
+        calMOL_sq(prefs[1],prefs[2],segBids[1]),
+        calMOL_sq(prefs[2],prefs[0],segBids[2]),
+        calMultiMOL_sq([prefs[0],prefs[1],prefs[2]],segBids[3])
+    ]
+
+    print "  [AxB] " + str(mols[0]) + " (Set size: " + str(len(segBids[0])) + ")"
+    print "  [BxC] " + str(mols[1]) + " (Set size: " + str(len(segBids[1])) + ")"
+    print "  [CxA] " + str(mols[2]) + " (Set size: " + str(len(segBids[2])) + ")"
+
+    print "[AxBxC] " + str(mols[3]) + " (Set size: " + str(len(segBids[3])) + ")",
+    print "(Mean of 2D results: " + str((mols[0]+mols[1]+mols[2])/3.0) + ")"
+
+def print3partyDist(prefs, isPrinting):
+    """3者の対立度を表示"""
+    global DEBUG
+    DEBUG = isPrinting # デバッグするかどうか
+    print "DEBUG is " + str(DEBUG)
+
+    print "<START> 3-party negotiation: Agent A, Agent B, and Agent C"
+    print3partyFormalData(prefs)
+
+    print "MOL (Target set: All Bids) ------------------------------------------"
+    print3partyMOL_allBids(prefs)
+
+    print "MOL (Target set: Over-RV Bids) --------------------------------------"
+    print3partyMOL_allOverRVBids(prefs)
+
+    print "MOL (Target set: Pareto Bids) ---------------------------------------"
+    print3partyMOL_allParetoBids(prefs)
+
+    print "MOL (Target set: Over-RV Pareto Bids) -------------------------------"
+    print3partyMOL_allOverRVParetoBids(prefs)
+
+
+###########################################################################################
+# 以下，必要に応じて記述を変更することで値を計算することができます。
+###########################################################################################
 
 # 対象となるxmlのpathをそれぞれ記入 (現時点では3者間交渉にのみ対応)
 xmls_path = [
-    "./preference/Domain1/Domain1_util1.xml",
-    "./preference/Domain1/Domain1_util2.xml",
-    "./preference/Domain1/Domain1_util3.xml"
+    "./preference/Domain16/Domain16_util4.xml",
+    "./preference/Domain16/Domain16_util5.xml",
+    "./preference/Domain16/Domain16_util6.xml"
 ]
 # それぞれのxmlを読み込み，Preferenceクラスとして格納
 prefs = [
@@ -347,4 +453,4 @@ prefs = [
 DEBUG = False
 
 # ３者間交渉として計算開始
-print3partyDist(prefs)
+print3partyDist(prefs, DEBUG)
