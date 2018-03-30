@@ -440,10 +440,14 @@ def print3partyDist(prefs, isPrinting):
 
 # 対象となるxmlのpathをそれぞれ記入 (現時点では3者間交渉にのみ対応)
 xmls_path = [
-    "./preference/Domain16/Domain16_util4.xml",
-    "./preference/Domain16/Domain16_util5.xml",
-    "./preference/Domain16/Domain16_util6.xml"
+    "../preference/ANAC2016/Maxoops/WindFarm_util1.xml",
+    "../preference/ANAC2016/Maxoops/WindFarm_util2.xml",
+    "../preference/ANAC2016/Maxoops/WindFarm_util3.xml"
 ]
+
+for i in range(3):
+    print xmls_path[i]
+
 # それぞれのxmlを読み込み，Preferenceクラスとして格納
 prefs = [
     Preference(xmls_path[0]), Preference(xmls_path[1]), Preference(xmls_path[2])
